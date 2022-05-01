@@ -41,6 +41,29 @@ for i in range(10):
 
  ## Buildig model ##
  
+ As input I used 80% of data for training and 20% for validation and each image resized 240x240
+ 
+ 
+ 
+ ```python
+ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+  data_dir,
+  validation_split=0.2,
+  subset="training",
+  seed=123,
+  image_size=(240, 240),
+  batch_size=32)
+
+
+val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+  data_dir,
+  validation_split=0.2,
+  subset="validation",
+  seed=123,
+  image_size=(240, 240),
+  batch_size=32)
+  
+ ```
 I used convolutional neural network for my classification 
 
 ```python
