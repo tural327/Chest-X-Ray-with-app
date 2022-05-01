@@ -7,9 +7,9 @@ import cv2
 
 
 ## Data Explorer Desktop/project/Chest-X-Ray-with-app/
-NORMAL = glob.glob("train/NORMAL/*")
+NORMAL = glob.glob("Desktop/project/Chest-X-Ray-with-app/train/NORMAL/*")
 
-PNEUMONIA =  glob.glob("train/PNEUMONIA/*")
+PNEUMONIA =  glob.glob("Desktop/project/Chest-X-Ray-with-app/train/PNEUMONIA/*")
 
 
 
@@ -39,7 +39,7 @@ img_width = 240
 
 
 ## training dir...
-data_dir = "train"
+data_dir = "Desktop/project/Chest-X-Ray-with-app/train"
 
 # 80% of image will be train our model and 20 % for validation
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
@@ -49,6 +49,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
   seed=123,
   image_size=(img_height, img_width),
   batch_size=batch_size)
+
 
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
   data_dir,
@@ -70,52 +71,35 @@ data_augmentation = tf.keras.Sequential(
   ]
 )
 
-# model building 
-class my_class(tf.keras.Model):
-    def __init__(self):
-        # Initialize the necessary components of tf.keras.Model
-        super(my_class, self).__init__()
-        # -----------------------------------------------------------
-        # data_augmentation layer using to get best model beacause loss was not good 
-        self.aug = data_augmentation
-        self.in_ly = layers.experimental.preprocessing.Rescaling(1./255)
-        # conv layers -- so I used 3 convolution layer my model
-        self.conv1 = layers.Conv2D(16, 4, padding='same', activation='relu')
-        self.max1 = layers.MaxPooling2D()
-        self.conv2 = layers.Conv2D(32, 4, padding='same', activation='relu')
-        self.max2 = layers.MaxPooling2D()
-        self.conv3 = layers.Conv2D(64, 4, padding='same', activation='relu')
-        self.max3 = layers.MaxPooling2D()
-        # Flatten Layer
-        self.flt = layers.Flatten()
-        self.den1 = layers.Dense(128, activation='relu')
+def create_model():
+  model = tf.keras.models.Sequential([
+    data_augmentation,
+    layers.experimental.preprocessing.Rescaling(1./255),
+    layers.Conv2D(16, 4, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(32, 4, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(64, 4, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(1, activation='sigmoid')
+    ])
+    
+  model.compile(optimizer='adam',
+                loss=tf.keras.losses.binary_crossentropy,
+                metrics=['accuracy'])
+  return model
 
-        #end
-        self.den2 = layers.Dense(1, activation='sigmoid')
-
-    # Forward pass of model - order does matter.
-    def call(self, inputs):
-        x = self.aug(inputs)
-        x = self.in_ly(x)
-        x = self.conv1(x)
-        x = self.max1(x)
-        x = self.conv2(x)
-        x = self.max2(x)
-        x = self.conv3(x)
-        x = self.max3(x)
-        x = self.flt(x)
-        x = self.den1(x)
-        return self.den2(x) # Return results of Output Layer
+    
+model = create_model()
+model.summary()
 
 
-classifier = my_class()
-classifier.compile(optimizer='adam',
-              loss=tf.keras.losses.binary_crossentropy,
-              metrics=['accuracy'])
 
+history = model.fit(train_ds,validation_data=val_ds,epochs=20)
 
-history = classifier.fit(train_ds,validation_data=val_ds,epochs=20)
-
+model.save("Desktop/project/Chest-X-Ray-with-app/my_model.h5")
 
 
 plt.figure(figsize=(20,10))
